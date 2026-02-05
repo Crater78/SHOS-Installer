@@ -14,11 +14,11 @@ specs_check() {
     getsomerest
 
     if [ ! -d /sys/firmware/efi ]; then
-        whiptail --title "ERROR"\
-        --msgbox "Your system does not have UEFI enabled (or it is not supported), please enable it in BIOS, then try again"\
-        --ok-button "Main Menu"\
+        whiptail --title "ERROR" \
+        --msgbox "Your system does not have UEFI enabled (or it is not supported), please enable it in BIOS, then try again" \
+        --ok-button "Main Menu" \
         --clear \
-        0 0\
+        0 0 \
 
         mainloop
         return
@@ -26,11 +26,11 @@ specs_check() {
     fi
 
     if [ $(uname -m) != "x86_64" ]; then
-        whiptail --title "ERROR"\
-        --msgbox "Your system is not supported, please use a x86 based system"\
-        --ok-button "Main Menu"\
+        whiptail --title "ERROR" \
+        --msgbox "Your system is not supported, please use a x86 based system" \
+        --ok-button "Main Menu" \
         --clear \
-        0 0\
+        0 0 \
 
         mainloop
         return
@@ -54,11 +54,11 @@ network_flow() {
             echo "No Network Connection ..."
             getsomerest
 
-            whiptail --title "$TITLE"\
-                --msgbox "On the next page, please pick a network to connect to."\
-                --ok-button "Continue"\
+            whiptail --title "$TITLE" \
+                --msgbox "On the next page, please pick a network to connect to." \
+                --ok-button "Continue" \
                 --clear \
-                0 0\
+                0 0 \
             
             nmtui connect
         fi
@@ -76,11 +76,13 @@ get_image() {
     
     getsomerest
 
-    echo "Image Downloaded"
+    echo "Image Downloaded ..."
 }
 
 flash_image() {
     echo "Scanning Disks ..."
+
+    getsomerest
     
     DISK=1
 
@@ -89,25 +91,29 @@ flash_image() {
 
         local options=()
 
+        getsomerest
+
         echo "Scanning Disks ..."
 
-        boot_disk=$(lsblk -no PKNAME "$(findmnt -no SOURCE /)" 2>/dev/null)
+        getsomerest
 
         while read -r name type size model; do
             [ "$type" = "disk" ] || continue
 
-            [ "$name" != "$boot_disk" ] || continue
+            getsomerest
 
             echo "$name"
 
             options+=("/dev/$name" "$size $model")
-        done < <(lsblk -dn -o NAME,TYPE,SIZE,MODEL | grep -P '\s([0-9]+T|[2-9][1-9]G|[3-9][0-9]G|[1-9][0-9][0-9]G)$')
+        done < <(lsblk -dn -o NAME,TYPE,SIZE,MODEL)
 
         echo "Loading disk options ..."
 
+        getsomerest
+
         TARGET_DISK=$(
             whiptail --title "$TITLE" \
-                    --menu "Select target disk\nAll data on the selected disk will be ERASED! (Disks under 20GB are not shown):"\
+                    --menu "Select target disk\nAll data on the selected disk will be ERASED! (Disks under 20GB are not shown):" \
                     --clear \
                     --cancel-button "Main Menu" \
                     0 0 0 \
@@ -116,6 +122,8 @@ flash_image() {
         )
 
         EXITSTATUS=$?
+        
+        getsomerest
 
         if [ "$EXITSTATUS" -ne 0 ]; then
             mainloop
@@ -125,26 +133,28 @@ flash_image() {
         DISK=0
 
         if [ -z "$TARGET_DISK" ]; then
-            whiptail --title "ERROR"\
-            --msgbox "Please select a disk"\
-            --ok-button "Back"\
+            whiptail --title "ERROR" \
+            --msgbox "Please select a disk" \
+            --ok-button "Back" \
             --clear \
-            0 0\
+            0 0 \
 
             DISK=1
             
         fi
     done
 
-    whiptail --title "$TITLE"\
-        --yesno "This will erase all data on $TARGET_DISK, are you sure you want to continue?"\
+    whiptail --title "$TITLE" \
+        --yesno "This will erase all data on $TARGET_DISK, are you sure you want to continue?" \
         --clear \
-        0 0\
+        0 0 \
 
     if [ $? -ne 0 ]; then
         mainloop
         return
     fi
+
+    clear
 
     echo "Starting Flash ..."
 
@@ -153,11 +163,11 @@ flash_image() {
     DD_STATUS=$?
 
     if [ "$DD_STATUS" -ne 0 ]; then
-        whiptail --title "ERROR"\
-        --msgbox "Flash failed, error code $DD_STATUS"\
-        --ok-button "Main Menu"\
+        whiptail --title "ERROR" \
+        --msgbox "Flash failed, error code $DD_STATUS" \
+        --ok-button "Main Menu" \
         --clear \
-        0 0\
+        0 0 \
 
         mainloop
         return
@@ -167,11 +177,11 @@ flash_image() {
 }
 
 reboot_system() {
-    whiptail --title "$TITLE"\
-                --msgbox "HAOS has been instaled, remove the boot media, then press enter to reboot"\
-                --ok-button "Continue"\
+    whiptail --title "$TITLE" \
+                --msgbox "HAOS has been instaled, remove the boot media, then press enter to reboot" \
+                --ok-button "Continue" \
                 --clear \
-                0 0\
+                0 0 \
     
     reboot
 }
@@ -202,11 +212,11 @@ install_flow() {
 }
 
 about_flow() {
-    whiptail --title "$TITLE"\
-    --msgbox "SHOS is open-source software designed to install Home Assistant on x86 platforms.\nIt is released under the Apache 2.0 License, and developed by Crater78, with contributions from the community.\nVisit https://github.com/Crater78/SHOS-Installer to learn more!\nDisclaimer: SHOS is not related to or endorsed by the Home Assistant Team."\
-    --ok-button "Back"\
+    whiptail --title "$TITLE" \
+    --msgbox "SHOS is open-source software designed to install Home Assistant on x86 platforms.\nIt is released under the Apache 2.0 License, and developed by Crater78, with contributions from the community.\nVisit https://github.com/Crater78/SHOS-Installer to learn more!\nDisclaimer: SHOS is not related to or endorsed by the Home Assistant Team." \
+    --ok-button "Back" \
     --clear \
-    0 0\
+    0 0 \
 
     mainloop
     return
@@ -221,15 +231,15 @@ debug_mode_flow() {
 }
 
 mainloop () {
-    MENU=$(whiptail --title "$TITLE"\
-        --menu "Main Menu"\
+    MENU=$(whiptail --title "$TITLE" \
+        --menu "Main Menu" \
         --nocancel \
         --clear \
-        0 0 0\
-        "1" "Install Home Assistant"\
-        "2" "About SHOS"\
-        "3" "Exit SHOS"\
-        "4" "Debug Mode"\
+        0 0 0 \
+        "1" "Install Home Assistant" \
+        "2" "About SHOS" \
+        "3" "Exit SHOS" \
+        "4" "Debug Mode" \
     3>&1 1>&2 2>&3)
 
     case "$MENU" in
