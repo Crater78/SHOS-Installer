@@ -113,7 +113,8 @@ reboot_system() {
 install_flow() {
     clear
     
-    echo "Getting Ready to Install SHOS"
+    echo "Getting Ready to Install SHOS ..."
+
     # Check System Specs
     specs_check
 
