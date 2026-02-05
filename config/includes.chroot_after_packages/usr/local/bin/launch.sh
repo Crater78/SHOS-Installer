@@ -1,4 +1,3 @@
-TERM=linux
 #!/usr/bin/env bash
 TITLE="SHOS"
 
@@ -13,18 +12,28 @@ specs_check() {
 
     getsomerest
 
-    # TODO: Write Code to Check Specs
-
-    SPECS=1
-
-    if [ "$SPECS" -eq 0 ]; then
+    if [ ! -d /sys/firmware/efi ]; then
         whiptail --title "ERROR"\
-        --msgbox "Your system does not meet the specifications required to install Home Assistant"\
+        --msgbox "Your system does not have UEFI enabled (or it is not supported), please enable it in BIOS, then try again"\
         --ok-button "Main Menu"\
         --clear \
         0 0\
 
         mainloop
+        return
+
+    fi
+
+    if [ $(uname -m) != "x86_64" ]; then
+        whiptail --title "ERROR"\
+        --msgbox "Your system is not supported, please use a x86 based system"\
+        --ok-button "Main Menu"\
+        --clear \
+        0 0\
+
+        mainloop
+        return
+    
     fi
 }
 
@@ -44,7 +53,7 @@ network_flow() {
             echo "No Network Connection ..."
             getsomerest
 
-            whiptail --title $TITLE\
+            whiptail --title "$TITLE"\
                 --msgbox "On the next page, please pick a network to connect to."\
                 --ok-button "Continue"\
                 --clear \
@@ -70,39 +79,93 @@ get_image() {
 flash_image() {
     echo "Scanning Disks ..."
     
-    local options=()
+    DISK=1
 
-    echo "Scanning Disks ..."
+    while [ "$DISK" -ne 0 ]; then
+        clear
 
-    while read -r name type size model; do
-        [ "$type" = "disk" ] || continue
+        local options=()
 
-        echo "$name"
+        echo "Scanning Disks ..."
 
-        options+=("/dev/$name" "$size $model")
-    done < <(lsblk -dn -o NAME,TYPE,SIZE,MODEL)
+        boot_disk=$(lsblk -no PKNAME "$(findmnt -no SOURCE /)" 2>/dev/null)
 
-    echo "Loading disk options ..."
+        while read -r name type size model; do
+            [ "$type" = "disk" ] || continue
 
-    TARGET_DISK=$(
-        whiptail --title "$TITLE" \
-                 --menu "Select target disk\nAll data on the selected disk will be ERASED:" \
-                 --clear \
-                 0 0 0 \
-                 "${options[@]}" \
-                 3>&1 1>&2 2>&3
-    )
+            [ "$name" != "$boot_disk" ] || continue
+
+            echo "$name"
+
+            options+=("/dev/$name" "$size $model")
+        done < <(lsblk -dn -o NAME,TYPE,SIZE,MODEL | grep -P '\s([0-9]+T|[2-9][1-9]G|[3-9][0-9]G|[1-9][0-9][0-9]G)$')
+
+        echo "Loading disk options ..."
+
+        TARGET_DISK=$(
+            whiptail --title "$TITLE" \
+                    --menu "Select target disk\nAll data on the selected disk will be ERASED! (Disks under 20GB are not shown):"\
+                    --clear \
+                    --cancel-button "Main Menu" \
+                    0 0 0 \
+                    "${options[@]}" \
+                    3>&1 1>&2 2>&3
+        )
+
+        EXITSTATUS=$?
+
+        if [ "$EXITSTATUS" -ne 0 ]; then
+            mainloop
+            return
+        fi
+
+        DISK=0
+
+        if [ -z "$TARGET_DISK" ]; then
+            whiptail --title "ERROR"\
+            --msgbox "Please select a disk"\
+            --ok-button "Back"\
+            --clear \
+            0 0\
+
+            DISK=1
+            
+        fi
+    done
+
+    whiptail --title "$TITLE"\
+        --yesno "This will erase all data on $TARGET_DISK, are you sure you want to continue?"\
+        --clear \
+        0 0\
+
+    if [ $? -ne 0 ]; then
+        mainloop
+        return
+    fi
 
     echo "Starting Flash ..."
 
     xzcat /tmp/home-assistant.img.xz | dd of="$TARGET_DISK" bs=4M status=progress conv=fsync
     
+    DD_STATUS=$?
+
+    if [ "$DD_STATUS" -ne 0 ]; then
+        whiptail --title "ERROR"\
+        --msgbox "Flash failed, error code $DD_STATUS"\
+        --ok-button "Main Menu"\
+        --clear \
+        0 0\
+
+        mainloop
+        return
+    fi
+
     sync
 }
 
 reboot_system() {
-    whiptail --title $TITLE\
-                --msgbox "HAOS has been instaled, press enter to reboot, then remove the boot media"\
+    whiptail --title "$TITLE"\
+                --msgbox "HAOS has been instaled, remove the boot media, then press enter to reboot"\
                 --ok-button "Continue"\
                 --clear \
                 0 0\
@@ -136,13 +199,14 @@ install_flow() {
 }
 
 about_flow() {
-    whiptail --title $TITLE\
-    --msgbox "SHOS is open-source software designed to install Home Assistant on x86 platforms.\nIt is released under the Apache 2.0 License, and developed by Crater78, with contributions from the community.\nVisit https://github.com/Crater78/SHOS-Installer to learn more!\nDisclaimer: SHOS is not related to or endorsed by the Home Assistant Team."\        0 0\
+    whiptail --title "$TITLE"\
+    --msgbox "SHOS is open-source software designed to install Home Assistant on x86 platforms.\nIt is released under the Apache 2.0 License, and developed by Crater78, with contributions from the community.\nVisit https://github.com/Crater78/SHOS-Installer to learn more!\nDisclaimer: SHOS is not related to or endorsed by the Home Assistant Team."\
     --ok-button "Back"\
     --clear \
     0 0\
 
     mainloop
+    return
 }
 
 debug_mode_flow() {
@@ -154,7 +218,7 @@ debug_mode_flow() {
 }
 
 mainloop () {
-    MENU=$(whiptail --title $TITLE\
+    MENU=$(whiptail --title "$TITLE"\
         --menu "Main Menu"\
         --nocancel \
         --clear \
@@ -173,12 +237,12 @@ mainloop () {
             about_flow
             ;;
         3)
-            shutdown
+            shutdown -h now
             ;;
         4)  debug_mode_flow
             ;;
         *)
-            shutdown
+            shutdown -h now
             ;;
     esac
 }
