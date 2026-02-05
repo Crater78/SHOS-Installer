@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 TITLE="SHOS"
-TERM=linux
+export TERM=linux
 
 echo "SHOS Ready ..."
 
@@ -84,7 +84,7 @@ flash_image() {
     
     DISK=1
 
-    while [ "$DISK" -ne 0 ]; then
+    while [ "$DISK" -ne 0 ]; do
         clear
 
         local options=()
@@ -249,7 +249,5 @@ mainloop () {
             ;;
     esac
 }
-
-clear
 
 mainloop
