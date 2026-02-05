@@ -22,10 +22,3 @@ logs/
 *.swp
 .DS_Store
 Thumbs.db
-
-# Python (if/when you add Python code)
-__pycache__/
-*.py[cod]
-.env
-.venv/
-venv/

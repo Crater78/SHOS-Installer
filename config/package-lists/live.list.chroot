@@ -2,3 +2,17 @@ live-boot
 live-config
 live-config-systemd
 systemd-sysv
+whiptail
+network-manager
+curl
+iputils-ping
+ca-certificates
+xz-utils
+coreutils
+nano
+strace
+less
+util-linux
+file
+htop
+ncdu
