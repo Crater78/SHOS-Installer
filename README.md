@@ -1,6 +1,6 @@
 ![Header](./github-header-banner.png)
 ---
-SHOS is a small, bootable installer for Home Assistant on generic x86_64 hardware, designed to be easy to flash and simple to use. It installs the full Home Assistant Operating System (HAOS) directly onto your machine, giving you the standard, fully supported OS configuration recommended for x86_64 systems. Once installation is complete, the result behaves like a normal HAOS install, with official update support, add-ons, and long-term maintenance handled through Home Assistant’s built-in tools.# Flashing SHOS
+SHOS is a small, bootable installer for Home Assistant on generic x86_64 hardware, designed to be easy to flash and simple to use, specifically filling the gap left by the lack of an official HAOS ISO/USB installer for PCs. It installs the full Home Assistant Operating System (HAOS) directly onto your machine, giving you the standard, fully supported OS configuration recommended for x86_64 systems. Once installation is complete, the result behaves like a normal HAOS install, with official update support, add-ons, and long-term maintenance handled through Home Assistant’s built-in tools.
 # Flashing SHOS to a USB
 ## Prerequisites
 - A Windows or Linux computer
