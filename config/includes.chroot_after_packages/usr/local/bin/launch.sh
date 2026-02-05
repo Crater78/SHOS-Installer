@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 TITLE="SHOS"
+TERM=linux
 
 echo "SHOS Ready ..."
 
@@ -69,7 +70,9 @@ get_image() {
 
     getsomerest
 
-    curl -L -o /tmp/home-assistant.img.xz "https://github.com/home-assistant/operating-system/releases/download/17.0/haos_generic-x86-64-17.0.img.xz"
+    HAOS_URL=$(curl -L -sS "https://crater78.github.io/SHOS-Installer/OS/build.txt")
+
+    curl -L -o /tmp/home-assistant.img.xz "$HAOS_URL"
     
     getsomerest
 
