@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 TITLE="SHOS"
+
 export TERM=linux
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+source "${SCRIPT_DIR}/whiptail_helper.sh"
 
 echo "SHOS Ready ..."
 
@@ -14,11 +19,7 @@ specs_check() {
     getsomerest
 
     if [ ! -d /sys/firmware/efi ]; then
-        whiptail --title "ERROR" \
-        --msgbox "Your system does not have UEFI enabled (or it is not supported), please enable it in BIOS, then try again" \
-        --ok-button "Main Menu" \
-        --clear \
-        0 0 \
+        wt_error "Your system does not have UEFI enabled (or it is not supported), please enable it in BIOS, then try again"
 
         mainloop
         return
@@ -26,11 +27,7 @@ specs_check() {
     fi
 
     if [ $(uname -m) != "x86_64" ]; then
-        whiptail --title "ERROR" \
-        --msgbox "Your system is not supported, please use a x86 based system" \
-        --ok-button "Main Menu" \
-        --clear \
-        0 0 \
+        wt_error "Your system is not supported, please use a x86 based system"
 
         mainloop
         return
@@ -54,12 +51,8 @@ network_flow() {
             echo "No Network Connection ..."
             getsomerest
 
-            whiptail --title "$TITLE" \
-                --msgbox "On the next page, please pick a network to connect to." \
-                --ok-button "Continue" \
-                --clear \
-                0 0 \
-            
+            wt_msg "On the next page, please pick a network to connect to."
+
             nmtui connect
         fi
     done
@@ -133,11 +126,7 @@ flash_image() {
         DISK=0
 
         if [ -z "$TARGET_DISK" ]; then
-            whiptail --title "ERROR" \
-            --msgbox "Please select a disk" \
-            --ok-button "Back" \
-            --clear \
-            0 0 \
+            wt_error "No disk selected, please select a disk to flash the image to"
 
             DISK=1
             
@@ -163,11 +152,7 @@ flash_image() {
     DD_STATUS=$?
 
     if [ "$DD_STATUS" -ne 0 ]; then
-        whiptail --title "ERROR" \
-        --msgbox "Flash failed, error code $DD_STATUS" \
-        --ok-button "Main Menu" \
-        --clear \
-        0 0 \
+        wt_error "Flash failed, error code $DD_STATUS"
 
         mainloop
         return
@@ -177,11 +162,7 @@ flash_image() {
 }
 
 reboot_system() {
-    whiptail --title "$TITLE" \
-                --msgbox "HAOS has been instaled, remove the boot media, then press enter to reboot" \
-                --ok-button "Continue" \
-                --clear \
-                0 0 \
+    wt_msg "HAOS has been instaled, remove the boot media, then press enter to reboot"
     
     reboot
 }
@@ -212,13 +193,10 @@ install_flow() {
 }
 
 about_flow() {
-    whiptail --title "$TITLE" \
-    --msgbox "SHOS is open-source software designed to install Home Assistant on x86 platforms.\nIt is released under the Apache 2.0 License, and developed by Crater78, with contributions from the community.\nVisit https://github.com/Crater78/SHOS-Installer to learn more!\nDisclaimer: SHOS is not related to or endorsed by the Home Assistant Team." \
-    --ok-button "Back" \
-    --clear \
-    0 0 \
+    wt_msg "SHOS is open-source software designed to install Home Assistant on x86 platforms.\nIt is released under the Apache 2.0 License, and developed by Crater78, with contributions from the community.\nVisit https://github.com/Crater78/SHOS-Installer to learn more!\nDisclaimer: SHOS is not related to or endorsed by the Home Assistant Team." "Back"
 
     mainloop
+    
     return
 }
 
