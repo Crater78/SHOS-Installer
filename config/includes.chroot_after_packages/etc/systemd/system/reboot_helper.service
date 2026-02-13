@@ -1,0 +1,20 @@
+[Unit]
+Description=Prompt to remove installation media and reboot
+DefaultDependencies=no
+Requires=reboot.target
+After=multi-user.target
+Before=reboot.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/reboot_helper.sh
+StandardInput=tty
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TimeoutStartSec=0
+
+[Install]
+WantedBy=reboot.target

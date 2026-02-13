@@ -162,9 +162,11 @@ flash_image() {
 }
 
 reboot_system() {
-    wt_msg "HAOS has been instaled, remove the boot media, then press enter to reboot"
-    
-    reboot
+    systemctl enable reboot_helper.service
+
+    systemctl start reboot_helper.service
+
+    systemctl isolate reboot.target
 }
 
 install_flow() {
@@ -196,7 +198,7 @@ about_flow() {
     wt_msg "SHOS is open-source software designed to install Home Assistant on x86 platforms.\nIt is released under the Apache 2.0 License, and developed by Crater78, with contributions from the community.\nVisit https://github.com/Crater78/SHOS-Installer to learn more!\nDisclaimer: SHOS is not related to or endorsed by the Home Assistant Team." "Back"
 
     mainloop
-    
+
     return
 }
 
